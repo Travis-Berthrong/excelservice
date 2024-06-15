@@ -25,13 +25,9 @@ router.get('/get_auth_token', async (req: Request, res: Response) => {
         return;
     }
     const { access_token, refresh_token } = tokens;
-    if (access_token && refresh_token) {
-        const account = await authControllers.createMicrosoftAccount(access_token, refresh_token);
-        if (account) {
-            res.status(200).send("Authenticated successfully");
-        } else {
-            res.status(500).send('Internal server error');
-        }
+    const account = await authControllers.createMicrosoftAccount(access_token, refresh_token);
+    if (account) {
+        res.status(200).send("Authenticated successfully");
     } else {
         res.status(500).send('Internal server error');
     }
