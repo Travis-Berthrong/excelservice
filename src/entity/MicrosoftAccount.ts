@@ -1,12 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column } from "typeorm"
+import { Entity, Column, PrimaryColumn } from "typeorm"
 
 @Entity()
 export class MicrosoftAccount {
 
-    @PrimaryGeneratedColumn()
-    id: number
-
-    @Column()
+    @PrimaryColumn()
     email: string
 
     @Column()
@@ -15,7 +12,7 @@ export class MicrosoftAccount {
     @Column()
     refresh_token: string
 
-    @Column("text", { array: true })
-    excel_sheets: string[][]
+    @Column()
+    workbook_id: string
 
 }
