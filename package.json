@@ -1,0 +1,23 @@
+{
+  "name": "excelservice",
+  "version": "1.0.0",
+  "description": "Microservice for performing CRUD operations on Excel via GraphApi",
+  "main": "index.ts",
+  "scripts": {
+    "build": "npm run build -- -w",
+    "start:dev": "ts-node index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Travis Berthrong",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "typescript": "^5.4.5"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21"
+  }
+}
