@@ -24,16 +24,16 @@ class SheetsController {
         const response = await axios.post(url, data, { headers });
         this.workbookSessionId = response.data.id;
         return true
-    } catch (error) {
-            if (error.response.status === 401 && !avoid_stack_overflow) {
-                console.log('request failed with 401, refreshing tokens')
-                const { access_token, refresh_token } = await sendAuthTokenRequest(this.MicrosoftAccount.refresh_token, true);
-                this.MicrosoftAccount.access_token = access_token;
-                this.MicrosoftAccount.refresh_token = refresh_token;
-                return this.getSessionId(true)
-            }
-            console.log(error.data)
-            return false
+        } catch (error) {
+                if (error.response.status === 401 && !avoid_stack_overflow) {
+                    console.log('request failed with 401, refreshing tokens')
+                    const { access_token, refresh_token } = await sendAuthTokenRequest(this.MicrosoftAccount.refresh_token, true);
+                    this.MicrosoftAccount.access_token = access_token;
+                    this.MicrosoftAccount.refresh_token = refresh_token;
+                    return this.getSessionId(true)
+                }
+                console.log(error.data)
+                return false
         }
     }
 
@@ -44,21 +44,29 @@ class SheetsController {
             'Authorization': `Bearer ${this.MicrosoftAccount.access_token}`,
             'workbook-session-id': this.workbookSessionId
         };
+        try {
         const response = await axios.get(url, { headers });
-        if (response.status == 404 && !avoid_stack_overflow) {
-            await this.getSessionId();
-            return this.fetchSheets(true);
-        }
-        if (response.status === 401 && !avoid_stack_overflow) {
-            const { access_token, refresh_token } = await sendAuthTokenRequest(this.MicrosoftAccount.refresh_token, true);
-            this.MicrosoftAccount.access_token = access_token;
-            this.MicrosoftAccount.refresh_token = refresh_token;
-            return this.fetchSheets(true);
-        }
-        if (response.status !== 200) {
-            throw new Error(response.data);
-        }
         return response.data.value;
+        } catch (error) {
+            if (!error.response) {
+                console.log(error)
+                return;
+            }
+            if (error.response.status == 404 && !avoid_stack_overflow) {
+                await this.getSessionId();
+                return this.fetchSheets(true);
+            }
+            if (error.response.status === 401 && !avoid_stack_overflow) {
+                const { access_token, refresh_token } = await sendAuthTokenRequest(this.MicrosoftAccount.refresh_token, true);
+                this.MicrosoftAccount.access_token = access_token;
+                this.MicrosoftAccount.refresh_token = refresh_token;
+                return this.fetchSheets(true);
+            }
+            console.log(error.code)
+            console.log(error.response)
+            return;
+        }
+
     }
 
     private getSheetId(sheetName: string) {
