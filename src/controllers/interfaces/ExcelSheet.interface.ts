@@ -5,6 +5,7 @@ export interface IExcelSheet {
     name: string;
     position: number;
     visibility: string;
+    tables?: Array<{ id: string, name: string}>
 }
 
 
