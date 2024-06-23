@@ -9,7 +9,6 @@ import path from 'path';
 
 const router: Router = express.Router();
 const uploadPath = path.join(__dirname, '/temp_uploads/')
-console.log(uploadPath)
 const upload = multer({ dest: uploadPath });
 
 const parseCsvData = async (csvFile: Express.Multer.File): Promise<string[][] | null> => {
@@ -19,7 +18,7 @@ const parseCsvData = async (csvFile: Express.Multer.File): Promise<string[][] | 
     fs.createReadStream(filePath)
       .pipe(fastCsv.parse({ headers: true }))
       .on('data', (row) => {
-        row = [...Object.values(row)];
+        row = [...Object.values(row)].filter((value: string) => !isNaN(parseFloat(value)))
         console.log('Row:', row);
         results.push(row);
       })
