@@ -18,7 +18,7 @@ const parseCsvData = async (csvFile: Express.Multer.File): Promise<string[][] | 
     fs.createReadStream(filePath)
       .pipe(fastCsv.parse({ headers: true }))
       .on('data', (row) => {
-        row = [...Object.values(row)].filter((value: string) => !isNaN(parseFloat(value)))
+        row = [...Object.values(row)].map((value: string) => !isNaN(parseFloat(value))? value : 0)
         console.log('Row:', row);
         results.push(row);
       })
