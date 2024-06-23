@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import { MicrosoftAccount } from '../entity/MicrosoftAccount';
 import { IExcelSheet } from './interfaces/ExcelSheet.interface';
 import { config } from 'dotenv';
@@ -75,7 +75,7 @@ class SheetsController {
         return encodeURIComponent(sheet.id);
     }
 
-    private async fetchTables(avoid_stack_overflow = false) {
+    private async fetchTables(avoid_stack_overflow = false): Promise<void> {
         try {
             const updatedSheets = this.sheets.map(async (sheet): Promise<IExcelSheet> => {
                 const sheetId = encodeURIComponent(sheet.id)
@@ -125,7 +125,7 @@ class SheetsController {
         return this.sheets;
     }
 
-    public async AddSheet (sheetName: string, avoid_stack_overflow = false) {
+    public async AddSheet (sheetName: string, avoid_stack_overflow = false): Promise<AxiosResponse> {
         const url = `https://graph.microsoft.com/v1.0/me/drive/items/${this.MicrosoftAccount.workbook_id}/workbook/worksheets/add`;
         const data = {
             name: sheetName
@@ -166,10 +166,10 @@ class SheetsController {
     }
     }
 
-    public async DeleteSheet(sheetName: string, avoid_stack_overflow = false) {
-        const sheetId = this.getSheetId(sheetName);
+    public async DeleteSheet(sheetName: string, avoid_stack_overflow = false): Promise<Boolean> {
+        const sheetId: string = this.getSheetId(sheetName);
         if (!sheetId) throw new Error('Sheet not found')
-        const url = `https://graph.microsoft.com/v1.0/me/drive/items/${this.MicrosoftAccount.workbook_id}/workbook/worksheets('${sheetId}')`;
+        const url: string = `https://graph.microsoft.com/v1.0/me/drive/items/${this.MicrosoftAccount.workbook_id}/workbook/worksheets('${sheetId}')`;
         const headers = {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${this.MicrosoftAccount.access_token}`,
@@ -203,7 +203,7 @@ class SheetsController {
     }
     }
 
-   public async AddTable(sheetName: string, tableAddress: string, tableHasHeaders: Boolean = true, avoid_stack_overflow = false): Promise<any> {
+   public async AddTable(sheetName: string, tableAddress: string, tableHasHeaders: Boolean = true, avoid_stack_overflow = false): Promise<AxiosResponse> {
         const sheetId = this.getSheetId(sheetName);
         if (!sheetId) throw new Error("Sheet not found")
         const url = `https://graph.microsoft.com/v1.0/me/drive/items/${this.MicrosoftAccount.workbook_id}/workbook/worksheets('${sheetId}')/tables/add`;
@@ -242,8 +242,7 @@ class SheetsController {
     }
     }
 
-    //POST /me/drive/items/{id}/workbook/worksheets/{id|name}/tables/{id|name}/rows
-    public async AddTableRows (sheetName: string, tableName: string, tableData: Array<Array<string>>, avoid_stack_overflow = false) {
+    public async AddTableRows (sheetName: string, tableName: string, tableData: Array<Array<string>>, avoid_stack_overflow = false): Promise<AxiosResponse> {
         const sheetId = this.getSheetId(sheetName);
         if (!sheetId) throw new Error("Sheet not found")
         if (!this.sheets.find(sheet => sheet.tables.find(table => table.name === tableName))) {
