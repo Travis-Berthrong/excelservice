@@ -41,6 +41,13 @@ const parseCsvData = async (csvFile: Express.Multer.File): Promise<string[][] | 
 
 const sheetsController = new SheetsController();
 
+const validateSession = (req, res, next) => {
+    if(!sheetsController.GetMicrosoftAccount()) {
+        return res.status(401).json({ message: "Invalid session"})
+    }
+    next();
+}
+
 router.post('/create_session', async (req: Request, res: Response) => {
     try {
         const email = req.query.email as string;
@@ -58,7 +65,7 @@ router.post('/create_session', async (req: Request, res: Response) => {
     }
 });
 
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', validateSession, async (req: Request, res: Response) => {
     try {
         const sheets = await sheetsController.GetSheets();
         res.json(sheets);
@@ -67,7 +74,7 @@ router.get('/', async (req: Request, res: Response) => {
     }
 });
 
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', validateSession, async (req: Request, res: Response) => {
     try {
         const { sheetName } = req.body;
         const result = await sheetsController.AddSheet(sheetName);
@@ -80,7 +87,7 @@ router.post('/', async (req: Request, res: Response) => {
     }
 });
 
-router.delete('/:sheetName', async (req: Request, res: Response) => {
+router.delete('/:sheetName', validateSession, async (req: Request, res: Response) => {
     try {
         const sheetName = req.params.sheetName;
         await sheetsController.DeleteSheet(sheetName);
@@ -91,7 +98,7 @@ router.delete('/:sheetName', async (req: Request, res: Response) => {
     }
 });
 
-router.post('/table', async (req: Request, res: Response) => {
+router.post('/table', validateSession, async (req: Request, res: Response) => {
     try {
         const { sheetName, tableAddress, tableHasHeaders } = req.body;
         const response = await sheetsController.AddTable(sheetName, tableAddress, tableHasHeaders);
@@ -103,7 +110,7 @@ router.post('/table', async (req: Request, res: Response) => {
     }
 });
 
-router.post('/table/:tableName', upload.single('file'), async (req: Request, res: Response) => {
+router.post('/table/:tableName', validateSession, upload.single('file'), async (req: Request, res: Response) => {
     try {
         let { sheetName } = req.query;
         sheetName = sheetName.toString();

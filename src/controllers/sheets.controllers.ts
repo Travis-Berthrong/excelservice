@@ -125,6 +125,10 @@ class SheetsController {
         return this.sheets;
     }
 
+    public GetMicrosoftAccount() {
+        return this.MicrosoftAccount;
+    }
+
     public async AddSheet (sheetName: string, avoid_stack_overflow = false): Promise<AxiosResponse> {
         const url = `https://graph.microsoft.com/v1.0/me/drive/items/${this.MicrosoftAccount.workbook_id}/workbook/worksheets/add`;
         const data = {
