@@ -4,6 +4,8 @@
          "es5",
          "es6"
       ],
+      "typeRoots": ["./node_modules/@types", "./types"],
+      "types": ["express", "node"],
       "esModuleInterop": true,
       "target": "es5",
       "module": "commonjs",

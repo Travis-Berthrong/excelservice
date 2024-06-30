@@ -56,7 +56,9 @@ export const sendAuthTokenRequest = async (code: string, is_token_expired: boole
         if (response.status !== 200) {
             throw new Error(response.data);
         }
-        console.log(response.status, response.data);
+        if (is_token_expired) {
+            AppDataSource.getRepository(MicrosoftAccount).update({ refresh_token: code }, { access_token: response.data.access_token, refresh_token: response.data.refresh_token });
+        }
         return { access_token: response.data.access_token, refresh_token: response.data.refresh_token };
 
     } catch (error) {
@@ -88,8 +90,6 @@ export const createMicrosoftAccount = async (access_token: string, refresh_token
           'select': 'id,name,file'
         }
       })
-    console.log(workbook_response.data);
-
     if (workbook_response.status !== 200) {
         throw new Error(workbook_response.data);
     }
