@@ -78,8 +78,15 @@ router.post('/', validateSession, async (req: Request, res: Response) => {
     try {
         const { sheetName } = req.body;
         const result = await sheetsController.AddSheet(sheetName);
+        console.log('Result:', result);
         if (!result) {
-            res.status(500).json({ message: "Failed to create worksheet"})
+            return res.status(500).json({ message: "Failed to create worksheet"})
+        }
+        if ('error' in result && result.error.code === 'ItemAlreadyExists') {
+            return res.status(409).json({ message: 'Sheet already exists' });
+        }
+        if ('error' in result) {
+            return res.status(500).json({ message: 'Error creating sheet' });
         }
         res.status(201).json({ message: 'Sheet created', new_sheet: result });
     } catch (error) {
@@ -102,10 +109,18 @@ router.post('/table', validateSession, async (req: Request, res: Response) => {
     try {
         const { sheetName, tableAddress, tableHasHeaders } = req.body;
         const response = await sheetsController.AddTable(sheetName, tableAddress, tableHasHeaders);
+        if ('error' in response) {
+            if (response.error.code === 'InvalidArgument') {
+                return res.status(400).json({ message: 'Invalid table address' });
+            }
+            if (response.error.code === 'ItemAlreadyExists') {
+                return res.status(409).json({ message: 'Table already exists' });
+            }
+            return res.status(500).json({ message: 'Failed to create new table'});
+        }
         if (response) return res.status(201).json(response);
         return res.status(500).json({ message: 'Failed to create new table'});
     } catch (error) {
-        if (error.message === "Sheet not found") return res.status(404).json({ message: error.message});
         res.status(500).json({ message: error.message });
     }
 });
@@ -138,11 +153,14 @@ router.post('/table/:tableName', validateSession, upload.single('file'), async (
         if (!tableData) return res.status(500).json("Error parsing csv");
         const response = await sheetsController.AddTableRows(sheetName, tableName, tableData);
         if (!response) return res.status(500).json('Failed to add table data');
+        if ('error' in response) {
+            if (response.error.code === 'ItemNotFound') {
+                return res.status(404).json({ message: 'Table not found' });
+            }
+            return res.status(500).json({ message: 'Failed to add table data'});
+        }
         return res.status(201).json({ message: 'Data added successfully!'})
     } catch (error) {
-        if (error.message === "Sheet not found" || error.message === "Table not found") {
-            return res.status(404).json(error.message);
-        }
         return res.status(500).json({ message: error.message });
     }
 });
@@ -157,9 +175,6 @@ router.delete('/table/:tablename/rows', validateSession, async (req: Request, re
         await sheetsController.DeleteTableRows(sheetName.toString(), tableName, rowIds);
         return res.json({ message: `${rowIds.length} rows deleted from ${tableName}` });
     } catch (error) {
-        if (error.message === "Sheet not found" || error.message === "Table not found") {
-            return res.status(404).json(error.message);
-        }
         return res.status(500).json({ message: error.message });
     }
 });
@@ -171,11 +186,14 @@ router.get('/table/:tableName', validateSession, async (req: Request, res: Respo
         if (!sheetName) return res.status(400).json('Invalid sheet name');
         const tableData = await sheetsController.GetTableRows(sheetName.toString(), tableName);
         if (!tableData) return res.status(404).json('Table data not found');
+        if ('error' in tableData) {
+            if (tableData.error.code === 'ItemNotFound') {
+                return res.status(404).json({ message: 'Table not found' });
+            }
+            return res.status(500).json({ message: 'Failed to get table data'});
+        }
         return res.json(tableData);
     } catch (error) {
-        if (error.message === "Sheet not found" || error.message === "Table not found") {
-            return res.status(404).json(error.message);
-        }
         return res.status(500).json({ message: error.message });
     }
 });

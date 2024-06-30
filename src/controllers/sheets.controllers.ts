@@ -1,6 +1,7 @@
 import axios, { AxiosResponse } from 'axios';
 import { MicrosoftAccount } from '../entity/MicrosoftAccount';
 import { IExcelSheet } from './interfaces/ExcelSheet.interface';
+import { ICustomRequestError } from './interfaces/CustomRequestError.interface';
 import { config } from 'dotenv';
 import { sendAuthTokenRequest } from './auth.controllers';
 
@@ -114,6 +115,27 @@ class SheetsController {
         }
     }
 
+    private async handleRequestError(error: any, avoid_stack_overflow: Boolean, retryFunction: Function, ...args: any[]) {
+        if (!error.response) {
+            console.log(error)
+            return null;
+        }
+        if (error.response.status == 404 && !avoid_stack_overflow) {
+            await this.getSessionId();
+            return retryFunction(...args, true);
+        }
+        if (error.response.status === 401 && !avoid_stack_overflow) {
+            const { access_token, refresh_token } = await sendAuthTokenRequest(this.MicrosoftAccount.refresh_token, true);
+            this.MicrosoftAccount.access_token = access_token;
+            this.MicrosoftAccount.refresh_token = refresh_token;
+            return retryFunction(...args, true);
+        }
+        console.log(error.code)
+        console.log(error.response)
+        return error.response.data;
+    }
+
+
     public async Init(MicrosoftAccount: MicrosoftAccount) {
         this.MicrosoftAccount = MicrosoftAccount;
         await this.getSessionId();
@@ -129,7 +151,7 @@ class SheetsController {
         return this.MicrosoftAccount;
     }
 
-    public async AddSheet (sheetName: string, avoid_stack_overflow = false): Promise<AxiosResponse> {
+    public async AddSheet (sheetName: string, avoid_stack_overflow = false): Promise<AxiosResponse | ICustomRequestError> {
         const url = `https://graph.microsoft.com/v1.0/me/drive/items/${this.MicrosoftAccount.workbook_id}/workbook/worksheets/add`;
         const data = {
             name: sheetName
@@ -144,30 +166,14 @@ class SheetsController {
         this.sheets = await this.fetchSheets()
         await this.fetchTables()
         return response.data
-    } catch (error) {
-        if (!error.response) {
-            console.log(error)
-            return null;
+        } catch (error) {
+            try {
+                return await this.handleRequestError(error, avoid_stack_overflow, this.AddSheet, sheetName);
+            } catch (error) {
+                console.log(error)
+                return;
+            }
         }
-        if (error.response.status == 400 && error.response.data.error.code == 'ItemAlreadyExists') {
-            throw new Error(`A sheet with this name already exists`)
-        }
-        if (error.response.status == 404 && !avoid_stack_overflow) {
-            console.log('refreshing session id...')
-            await this.getSessionId();
-            return this.AddSheet(sheetName, true);
-        }
-        if (error.response.status == 401 && !avoid_stack_overflow) {
-            console.log("refreshing tokens...")
-            const { access_token, refresh_token } = await sendAuthTokenRequest(this.MicrosoftAccount.refresh_token, true);
-            this.MicrosoftAccount.access_token = access_token;
-            this.MicrosoftAccount.refresh_token = refresh_token;
-            return this.AddSheet(sheetName, true);
-        }
-        console.log(error.code)
-        console.log(error.response)
-        throw new Error(error.response.data.error.message)
-    }
     }
 
     public async DeleteSheet(sheetName: string, avoid_stack_overflow = false): Promise<Boolean> {
@@ -183,31 +189,15 @@ class SheetsController {
         await axios.delete(url, { headers });
         this.sheets = this.sheets.filter(sheet => sheet.name !== sheetName);
         return true
-    } catch (error) {
-        if (!error.response) {
-            console.log(error)
-            return false;
+        } catch (error) {
+            const result = await this.handleRequestError(error, avoid_stack_overflow, this.DeleteSheet, sheetName);
+            if('error' in result) {
+                return false
+            }
         }
-        if (error.response.status == 404 && !avoid_stack_overflow) {
-            console.log('refreshing session id...')
-            await this.getSessionId();
-            return this.DeleteSheet(sheetName, true);
-        }
-        if (error.response.status == 401 && !avoid_stack_overflow) {
-            console.log("refreshing tokens...")
-            const { access_token, refresh_token } = await sendAuthTokenRequest(this.MicrosoftAccount.refresh_token, true);
-            this.MicrosoftAccount.access_token = access_token;
-            this.MicrosoftAccount.refresh_token = refresh_token;
-            return this.DeleteSheet(sheetName, true);
-        }
-        console.log(error.code)
-        console.log(error.response)
-        throw new Error(error.response.data.error.message)
-
-    }
     }
 
-   public async AddTable(sheetName: string, tableAddress: string, tableHasHeaders: Boolean = true, avoid_stack_overflow = false): Promise<AxiosResponse> {
+   public async AddTable(sheetName: string, tableAddress: string, tableHasHeaders: Boolean = true, avoid_stack_overflow = false): Promise<AxiosResponse | ICustomRequestError> {
         const sheetId = this.getSheetId(sheetName);
         if (!sheetId) throw new Error("Sheet not found")
         const url = `https://graph.microsoft.com/v1.0/me/drive/items/${this.MicrosoftAccount.workbook_id}/workbook/worksheets('${sheetId}')/tables/add`;
@@ -224,26 +214,15 @@ class SheetsController {
         const response = await axios.post(url, data, { headers });
         this.sheets.find(sheet => sheet.name === sheetName).tables.push({ id: response.data.id, name: response.data.name });
         return response.data;
-    } catch (error) {
-        if (!error.response) {
-            console.log(error)
-            return null;
+        } catch (error) {
+            try {
+                return await this.handleRequestError(error, avoid_stack_overflow, this.AddTable, sheetName, tableAddress, tableHasHeaders);
+            }
+            catch (error) {
+                console.log(error)
+                return;
+            }
         }
-        if (error.response.status == 404 && !avoid_stack_overflow) {
-            await this.getSessionId();
-            return this.AddTable(sheetName, tableAddress, tableHasHeaders, true);
-        }
-        if (error.response.status === 401 && !avoid_stack_overflow) {
-            const { access_token, refresh_token } = await sendAuthTokenRequest(this.MicrosoftAccount.refresh_token, true);
-            this.MicrosoftAccount.access_token = access_token;
-            this.MicrosoftAccount.refresh_token = refresh_token;
-            return this.AddTable(sheetName, tableAddress, tableHasHeaders, true);
-        }
-        console.log(error.code)
-        console.log(error.response)
-        throw new Error(error.response.data.error.message)
-        
-    }
     }
 
     //DELETE https://graph.microsoft.com/v1.0/me/drive/items/{id}/workbook/tables/{id|name}
@@ -264,27 +243,19 @@ class SheetsController {
             this.sheets.find(sheet => sheet.name === sheetName).tables = this.sheets.find(sheet => sheet.name === sheetName).tables.filter(table => table.name !== tableName);
             return true
         } catch (error) {
-            if (!error.response) {
+            try {
+                const result = await this.handleRequestError(error, avoid_stack_overflow, this.DeleteTable, sheetName, tableName);
+                if('error' in result) {
+                    return false
+                }
+            } catch (error) {
                 console.log(error)
                 return false;
             }
-            if (error.response.status == 404 && !avoid_stack_overflow) {
-                await this.getSessionId();
-                return this.DeleteTable(sheetName, tableName, true);
-            }
-            if (error.response.status === 401 && !avoid_stack_overflow) {
-                const { access_token, refresh_token } = await sendAuthTokenRequest(this.MicrosoftAccount.refresh_token, true);
-                this.MicrosoftAccount.access_token = access_token;
-                this.MicrosoftAccount.refresh_token = refresh_token;
-                return this.DeleteTable(sheetName, tableName, true);
-            }
-            console.log(error.code)
-            console.log(error.response)
-            throw new Error(error.response.data.error.message)
         }
     }
 
-    public async AddTableRows (sheetName: string, tableName: string, tableData: Array<Array<string>>, avoid_stack_overflow = false): Promise<AxiosResponse> {
+    public async AddTableRows (sheetName: string, tableName: string, tableData: Array<Array<string>>, avoid_stack_overflow = false): Promise<AxiosResponse | ICustomRequestError> {
         const sheetId = this.getSheetId(sheetName);
         if (!sheetId) throw new Error("Sheet not found")
         if (!this.sheets.find(sheet => sheet.tables.find(table => table.name === tableName))) {
@@ -303,26 +274,12 @@ class SheetsController {
             const response = await axios.post(url, data, { headers })
             return response
         } catch (error) {
-            if (!error.response) {
+            try {
+                return await this.handleRequestError(error, avoid_stack_overflow, this.AddTableRows, sheetName, tableName, tableData);
+            } catch (error) {
                 console.log(error)
-                return null;
+                return;
             }
-            if (error.response.status == 404 && !avoid_stack_overflow) {
-                await this.getSessionId();
-                return this.AddTableRows(sheetName, tableName, tableData, true);
-            }
-            if (error.response.status === 401 && !avoid_stack_overflow) {
-                const { access_token, refresh_token } = await sendAuthTokenRequest(this.MicrosoftAccount.refresh_token, true);
-                this.MicrosoftAccount.access_token = access_token;
-                this.MicrosoftAccount.refresh_token = refresh_token;
-                return this.AddTableRows(sheetName, tableName, tableData, true);
-            }
-            if (error.response.status === 504 && !avoid_stack_overflow) {
-                return this.AddTableRows(sheetName, tableName, tableData, true);
-            }
-            console.log(error.code)
-            console.log(error.response)
-            throw new Error(error.response.data.error.message)
         }
     }
 
@@ -345,27 +302,19 @@ class SheetsController {
             }
             return true
         } catch (error) {
-            if (!error.response) {
+            try {
+                const result = await this.handleRequestError(error, avoid_stack_overflow, this.DeleteTableRows, sheetName, tableName, rowIndexs);
+                if('error' in result) {
+                    return false
+                }
+            } catch (error) {
                 console.log(error)
                 return false;
             }
-            if (error.response.status == 404 && !avoid_stack_overflow) {
-                await this.getSessionId();
-                return this.DeleteTableRows(sheetName, tableName, rowIndexs, true);
-            }
-            if (error.response.status === 401 && !avoid_stack_overflow) {
-                const { access_token, refresh_token } = await sendAuthTokenRequest(this.MicrosoftAccount.refresh_token, true);
-                this.MicrosoftAccount.access_token = access_token;
-                this.MicrosoftAccount.refresh_token = refresh_token;
-                return this.DeleteTableRows(sheetName, tableName, rowIndexs, true);
-            }
-            console.log(error.code)
-            console.log(error.response)
-            throw new Error(error.response.data.error.message)
         }
     }
 
-    public async GetTableRows (sheetName: string, tableName: string, avoid_stack_overflow = false): Promise<Array<Array<string>>> {
+    public async GetTableRows (sheetName: string, tableName: string, avoid_stack_overflow = false): Promise<Array<Array<string>> | ICustomRequestError> {
         //GET https://graph.microsoft.com/v1.0/me/drive/items/{id}/workbook/tables/{id|name}/rows?$top=5&$skip=5
         const sheetId = this.getSheetId(sheetName);
         if (!sheetId) throw new Error("Sheet not found")
@@ -384,23 +333,12 @@ class SheetsController {
             console.log(tableData)
             return tableData
         } catch (error) {
-            if (!error.response) {
+            try {
+                return await this.handleRequestError(error, avoid_stack_overflow, this.GetTableRows, sheetName, tableName);
+            } catch (error) {
                 console.log(error)
-                return null;
+                return;
             }
-            if (error.response.status == 404 && !avoid_stack_overflow) {
-                await this.getSessionId();
-                return this.GetTableRows(sheetName, tableName, true);
-            }
-            if (error.response.status === 401 && !avoid_stack_overflow) {
-                const { access_token, refresh_token } = await sendAuthTokenRequest(this.MicrosoftAccount.refresh_token, true);
-                this.MicrosoftAccount.access_token = access_token;
-                this.MicrosoftAccount.refresh_token = refresh_token;
-                return this.GetTableRows(sheetName, tableName, true);
-            }
-            console.log(error.code)
-            console.log(error.response)
-            throw new Error(error.response.data.error.message)
         } 
     }
 }
