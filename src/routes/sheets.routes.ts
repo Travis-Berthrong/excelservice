@@ -110,6 +110,21 @@ router.post('/table', validateSession, async (req: Request, res: Response) => {
     }
 });
 
+router.delete('/table/:tableName', validateSession, async (req: Request, res: Response) => {
+    try {
+        const { sheetName } = req.query;
+        const { tableName } = req.params;
+        if (!sheetName) return res.status(400).json('Invalid sheet name');
+        await sheetsController.DeleteTable(sheetName.toString(), tableName);
+        return res.json({ message: 'Table deleted' });
+    } catch (error) {
+        if (error.message === "Sheet not found" || error.message === "Table not found") {
+            return res.status(404).json(error.message);
+        }
+        return res.status(500).json({ message: error.message });
+    }
+});
+
 router.post('/table/:tableName', validateSession, upload.single('file'), async (req: Request, res: Response) => {
     try {
         let { sheetName } = req.query;
@@ -130,7 +145,40 @@ router.post('/table/:tableName', validateSession, upload.single('file'), async (
         }
         return res.status(500).json({ message: error.message });
     }
-})
+});
+
+router.delete('/table/:tablename/rows', validateSession, async (req: Request, res: Response) => {
+    try {
+        const { sheetName } = req.query;
+        const { tableName } = req.params;
+        const { rowIds } = req.body;
+        if (!sheetName) return res.status(400).json('Invalid sheet name');
+        if (!rowIds || rowIds.length === 0) return res.status(400).json('Invalid row ids');
+        await sheetsController.DeleteTableRows(sheetName.toString(), tableName, rowIds);
+        return res.json({ message: `${rowIds.length} rows deleted from ${tableName}` });
+    } catch (error) {
+        if (error.message === "Sheet not found" || error.message === "Table not found") {
+            return res.status(404).json(error.message);
+        }
+        return res.status(500).json({ message: error.message });
+    }
+});
+
+router.get('/table/:tableName', validateSession, async (req: Request, res: Response) => {
+    try {
+        const { sheetName } = req.query;
+        const { tableName } = req.params;
+        if (!sheetName) return res.status(400).json('Invalid sheet name');
+        const tableData = await sheetsController.GetTableRows(sheetName.toString(), tableName);
+        if (!tableData) return res.status(404).json('Table data not found');
+        return res.json(tableData);
+    } catch (error) {
+        if (error.message === "Sheet not found" || error.message === "Table not found") {
+            return res.status(404).json(error.message);
+        }
+        return res.status(500).json({ message: error.message });
+    }
+});
 
 export default router;
 

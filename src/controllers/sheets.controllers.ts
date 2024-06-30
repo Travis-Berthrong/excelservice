@@ -246,6 +246,44 @@ class SheetsController {
     }
     }
 
+    //DELETE https://graph.microsoft.com/v1.0/me/drive/items/{id}/workbook/tables/{id|name}
+    public async DeleteTable(sheetName: string, tableName: string, avoid_stack_overflow = false): Promise<Boolean> {
+        const sheetId = this.getSheetId(sheetName);
+        if (!sheetId) throw new Error("Sheet not found")
+        if (!this.sheets.find(sheet => sheet.tables.find(table => table.name === tableName))) {
+            throw new Error("Table not found")
+        }
+        const url = `https://graph.microsoft.com/v1.0/me/drive/items/${this.MicrosoftAccount.workbook_id}/workbook/worksheets/${sheetId}/tables/${tableName}`;
+        const headers = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.MicrosoftAccount.access_token}`,
+            'workbook-session-id': this.workbookSessionId
+        };
+        try {
+            await axios.delete(url, { headers });
+            this.sheets.find(sheet => sheet.name === sheetName).tables = this.sheets.find(sheet => sheet.name === sheetName).tables.filter(table => table.name !== tableName);
+            return true
+        } catch (error) {
+            if (!error.response) {
+                console.log(error)
+                return false;
+            }
+            if (error.response.status == 404 && !avoid_stack_overflow) {
+                await this.getSessionId();
+                return this.DeleteTable(sheetName, tableName, true);
+            }
+            if (error.response.status === 401 && !avoid_stack_overflow) {
+                const { access_token, refresh_token } = await sendAuthTokenRequest(this.MicrosoftAccount.refresh_token, true);
+                this.MicrosoftAccount.access_token = access_token;
+                this.MicrosoftAccount.refresh_token = refresh_token;
+                return this.DeleteTable(sheetName, tableName, true);
+            }
+            console.log(error.code)
+            console.log(error.response)
+            throw new Error(error.response.data.error.message)
+        }
+    }
+
     public async AddTableRows (sheetName: string, tableName: string, tableData: Array<Array<string>>, avoid_stack_overflow = false): Promise<AxiosResponse> {
         const sheetId = this.getSheetId(sheetName);
         if (!sheetId) throw new Error("Sheet not found")
@@ -287,6 +325,86 @@ class SheetsController {
             throw new Error(error.response.data.error.message)
         }
     }
+
+    //DELETE /me/drive/items/{id}/workbook/worksheets/{id|name}/tables/{id|name}/rows/{index}
+    public async DeleteTableRows (sheetName: string, tableName: string, rowIndexs: Array<number>, avoid_stack_overflow = false): Promise<Boolean> {
+        const sheetId = this.getSheetId(sheetName);
+        if (!sheetId) throw new Error("Sheet not found")
+        if (!this.sheets.find(sheet => sheet.tables.find(table => table.name === tableName))) {
+            throw new Error("Table not found")
+        }
+        const url = `https://graph.microsoft.com/v1.0/me/drive/items/${this.MicrosoftAccount.workbook_id}/workbook/worksheets/${sheetId}/tables/${tableName}/rows`
+        const headers = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.MicrosoftAccount.access_token}`,
+            'workbook-session-id': this.workbookSessionId
+        };
+        try {
+            for (const rowIndex of rowIndexs) {
+                await axios.delete(`${url}/${rowIndex}`, { headers })
+            }
+            return true
+        } catch (error) {
+            if (!error.response) {
+                console.log(error)
+                return false;
+            }
+            if (error.response.status == 404 && !avoid_stack_overflow) {
+                await this.getSessionId();
+                return this.DeleteTableRows(sheetName, tableName, rowIndexs, true);
+            }
+            if (error.response.status === 401 && !avoid_stack_overflow) {
+                const { access_token, refresh_token } = await sendAuthTokenRequest(this.MicrosoftAccount.refresh_token, true);
+                this.MicrosoftAccount.access_token = access_token;
+                this.MicrosoftAccount.refresh_token = refresh_token;
+                return this.DeleteTableRows(sheetName, tableName, rowIndexs, true);
+            }
+            console.log(error.code)
+            console.log(error.response)
+            throw new Error(error.response.data.error.message)
+        }
+    }
+
+    public async GetTableRows (sheetName: string, tableName: string, avoid_stack_overflow = false): Promise<Array<Array<string>>> {
+        //GET https://graph.microsoft.com/v1.0/me/drive/items/{id}/workbook/tables/{id|name}/rows?$top=5&$skip=5
+        const sheetId = this.getSheetId(sheetName);
+        if (!sheetId) throw new Error("Sheet not found")
+        if (this.sheets.find(sheet => sheet.tables.find(table => table.name === tableName)) ? false : true) {
+            throw new Error("Table not found")
+        }
+        const url = `https://graph.microsoft.com/v1.0/me/drive/items/${this.MicrosoftAccount.workbook_id}/workbook/worksheets/${sheetId}/tables/${tableName}/rows`
+        const headers = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.MicrosoftAccount.access_token}`,
+            'workbook-session-id': this.workbookSessionId
+        };
+        try {
+            const response = await axios.get(url, { headers })
+            const tableData = response.data.value.map((row: any) => { return { row_index: row.index, values: row.values[0] } })
+            console.log(tableData)
+            return tableData
+        } catch (error) {
+            if (!error.response) {
+                console.log(error)
+                return null;
+            }
+            if (error.response.status == 404 && !avoid_stack_overflow) {
+                await this.getSessionId();
+                return this.GetTableRows(sheetName, tableName, true);
+            }
+            if (error.response.status === 401 && !avoid_stack_overflow) {
+                const { access_token, refresh_token } = await sendAuthTokenRequest(this.MicrosoftAccount.refresh_token, true);
+                this.MicrosoftAccount.access_token = access_token;
+                this.MicrosoftAccount.refresh_token = refresh_token;
+                return this.GetTableRows(sheetName, tableName, true);
+            }
+            console.log(error.code)
+            console.log(error.response)
+            throw new Error(error.response.data.error.message)
+        } 
+    }
 }
+
+
 
 export default SheetsController;
