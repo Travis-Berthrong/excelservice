@@ -159,7 +159,7 @@ router.post('/table/:tableName', validateSession, upload.single('file'), async (
             }
             return res.status(500).json({ message: 'Failed to add table data'});
         }
-        return res.status(201).json({ message: 'Data added successfully!'})
+        return res.status(201).json({ message: 'Data added successfully!', tableName})
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }
