@@ -151,6 +151,10 @@ class SheetsController {
         return this.MicrosoftAccount;
     }
 
+    public GetSessionId() {
+        return this.workbookSessionId;
+    }
+
     public async AddSheet (sheetName: string, avoid_stack_overflow = false): Promise<AxiosResponse | ICustomRequestError> {
         const url = `https://graph.microsoft.com/v1.0/me/drive/items/${this.MicrosoftAccount.workbook_id}/workbook/worksheets/add`;
         const data = {

@@ -1,3 +1,12 @@
+# Microserivces Project - Excel API (Travis Berthrong)
+This project is a microservice that allows users to interact with an excel workbook stored in OneDrive.
+The API provides endpoints to create, delete, and get sheets in the workbook, create tables in the sheets, and add data to the tables.
+The API also provides endpoints to authenticate with OneDrive and get the access token.
+</br> 
+</br>
+This service is intended to be used in conjunction with the data analysis service (Junior Chi Emmanuel) which uses the data in the excel workbook to perform data analysis and visualization. A core service (Ilia Tiskin) is used to provide a common public-facing interface for the two services.
+
+
 # Usage
 
 To run this project, follow these steps:

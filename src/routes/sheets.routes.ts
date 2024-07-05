@@ -42,7 +42,9 @@ const parseCsvData = async (csvFile: Express.Multer.File): Promise<string[][] | 
 const sheetsController = new SheetsController();
 
 const validateSession = (req, res, next) => {
-    if(!sheetsController.GetMicrosoftAccount()) {
+    const current_account = sheetsController.GetMicrosoftAccount();
+    const current_session = sheetsController.GetSessionId();
+    if(!current_account || !current_session) {
         return res.status(401).json({ message: "Invalid session"})
     }
     next();
