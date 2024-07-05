@@ -25,6 +25,12 @@ To run this project, follow these steps:
     ```
 7. Use the [Postman collection](https://speeding-shuttle-145414.postman.co/workspace/New-Team-Workspace~9bbc6a62-0def-40d9-bad3-56959c01b44b/collection/32573845-2bccb303-05c6-40f4-a20c-69393dea7322?action=share&creator=32573845) to test the API.
 
+8. The `gen_test_csv.py` script can be used to generate a test CSV file to upload to the API. The script requires the `pandas` and `numpy` libraries to be installed. The script can be run with the following command:
+    ```
+    python gen_test_csv.py
+    ```
+    The script will generate a CSV file named `data_analysis_test.csv` in the root directory of the project.
+
 </br>
 </br>
 
