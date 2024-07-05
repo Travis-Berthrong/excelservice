@@ -108,8 +108,8 @@ To run this project, follow these steps:
 
 - GET `/excel_sheets/table/:tableName/` - Get the data of the table
     
-        Query Params:
-        - `sheetName` - Name of the sheet that contains the table
+    Query Params:
+    - `sheetName` - Name of the sheet that contains the table
 
 
 
