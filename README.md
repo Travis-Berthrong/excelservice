@@ -16,13 +16,14 @@ To run this project, follow these steps:
     ```
     npm install
     ```
-3. Make sure to set all the environment variables specified in the `.env.template` file.
-4. Ensure that PostgreSQL is running.
-5. Start the project by running the following command:
+3. Login to [Microsoft Entra](https://entra.microsoft.com/) and create a new application to get the `CLIENT_ID` and `SECRET_KEY` for OneDrive authentication. Upon registering the application, then ensure that the new application has the API permissions defined for `MICROSOFT_SCOPE` found in the `.env.template`(Refer to the [OneDrive API documentation](https://docs.microsoft.com/en-us/onedrive/developer/rest-api/getting-started/app-registration?view=odsp-graph-online) for more information). 
+4. Make sure to set all the environment variables specified in the `.env.template` file.
+5. Ensure that PostgreSQL is running.
+6. Start the project by running the following command:
     ```
     npm start
     ```
-6. Use the [Postman collection](https://speeding-shuttle-145414.postman.co/workspace/New-Team-Workspace~9bbc6a62-0def-40d9-bad3-56959c01b44b/collection/32573845-2bccb303-05c6-40f4-a20c-69393dea7322?action=share&creator=32573845) to test the API.
+7. Use the [Postman collection](https://speeding-shuttle-145414.postman.co/workspace/New-Team-Workspace~9bbc6a62-0def-40d9-bad3-56959c01b44b/collection/32573845-2bccb303-05c6-40f4-a20c-69393dea7322?action=share&creator=32573845) to test the API.
 
 </br>
 </br>
