@@ -69,7 +69,7 @@ To run this project, follow these steps:
      - `sheetName` - Name of the sheet that contains the table
 
      Body:
-     - `file` - CSV file to be uploaded
+     - `file` - CSV file to be uploaded. NOTE: the number of columns in the CSV file must match the number of columns in the table
 
 - GET `/excel_sheets/table/:tableName/` - Get the data of a table
      
