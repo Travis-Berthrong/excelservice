@@ -34,7 +34,7 @@ export const sendAuthTokenRequest = async (code: string, is_token_expired: boole
     const request_data = {
         'client_id': process.env.MICROSOFT_CLIENT_ID,
         'client_secret': process.env.MICROSOFT_SECRET_KEY,
-        'scope': process.env.MICROSOFT_SCOPE,
+        'scope': process.env.MICROSOFT_SCOPE || "offline_access https://graph.microsoft.com/Files.Read offline_access https://graph.microsoft.com/Files.ReadWrite offline_access https://graph.microsoft.com/profile offline_access https://graph.microsoft.com/User.Read",
         'grant_type': is_token_expired ? 'refresh_token' : 'authorization_code'
     };
 
@@ -42,7 +42,7 @@ export const sendAuthTokenRequest = async (code: string, is_token_expired: boole
         request_data['refresh_token'] = code;
     } else {
         request_data['code'] = code;
-        request_data['redirect_uri'] = process.env.MICROSOFT_REDIRECT_URI;
+        request_data['redirect_uri'] = process.env.MICROSOFT_REDIRECT_URI || 'https://google.com/redirect';
     }
 
     try {
