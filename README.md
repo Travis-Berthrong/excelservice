@@ -4,7 +4,7 @@ The API provides endpoints to create, delete, and get sheets in the workbook, cr
 The API also provides endpoints to authenticate with OneDrive and get the access token.
 </br> 
 </br>
-This service is intended to be used in conjunction with the data analysis service (Junior Chi Emmanuel) which uses the data in the excel workbook to perform data analysis and visualization. A core service (Ilia Tiskin) is used to provide a common public-facing interface for the two services.
+This service is intended to be used in conjunction with the [data analysis service](https://github.com/chiemmanuel/analyticservice) (Junior Chi Emmanuel) which uses the data in the excel workbook to perform data analysis and visualization. A core service (Ilia Tiskin) is used to provide a common public-facing interface for the two services.
 
 
 # Usage
@@ -16,8 +16,8 @@ To run this project, follow these steps:
     ```
     npm install
     ```
-3. Login to [Microsoft Entra](https://entra.microsoft.com/) and create a new application to get the `CLIENT_ID` and `SECRET_KEY` for OneDrive authentication. Upon registering the application, then ensure that the new application has the API permissions defined for `MICROSOFT_SCOPE` found in the `.env.template`(Refer to the [OneDrive API documentation](https://docs.microsoft.com/en-us/onedrive/developer/rest-api/getting-started/app-registration?view=odsp-graph-online) for more information). 
-4. Make sure to set all the environment variables specified in the `.env.template` file.
+3. Login to [Microsoft Entra](https://entra.microsoft.com/) and create a new application to get the `CLIENT_ID` and `SECRET_KEY` for OneDrive authentication. Upon registering the application, then ensure that the new application has a redirect URL such as `https://google.com/redirect` and the delegated permissions are set to `offline_access`, `profile`, `User.Read`, `Files.Read`, and `Files.readWrite`.
+4. Make sure to set all the environment variables specified in the `.env.template` file within a local `.env` file.
 5. Ensure that PostgreSQL is running.
 6. Start the project by running the following command:
     ```
