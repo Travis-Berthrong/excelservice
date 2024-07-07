@@ -190,7 +190,8 @@ class SheetsController {
             'workbook-session-id': this.workbookSessionId
         };
         try {
-        await axios.delete(url, { headers });
+        const result = await axios.delete(url, { headers });
+        console.log(result)
         this.sheets = this.sheets.filter(sheet => sheet.name !== sheetName);
         return true
         } catch (error) {

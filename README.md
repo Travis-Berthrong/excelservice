@@ -4,7 +4,7 @@ The API provides endpoints to create, delete, and get sheets in the workbook, cr
 The API also provides endpoints to authenticate with OneDrive and get the access token.
 </br> 
 </br>
-This service is intended to be used in conjunction with the [data analysis service](https://github.com/chiemmanuel/analyticservice) (Junior Chi Emmanuel) which uses the data in the excel workbook to perform data analysis and visualization. A core service (Ilia Tiskin) is used to provide a common public-facing interface for the two services.
+This service is intended to be used in conjunction with the [data analysis service](https://github.com/chiemmanuel/analyticservice) (Junior Chi Emmanuel) which uses the data in the excel workbook to perform data analysis and visualization. A [core service](https://github.com/t1skin/coreservice) (Ilia Tiskin) is used to provide a common public-facing interface for the two services.
 
 
 # Usage
