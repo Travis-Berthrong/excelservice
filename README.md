@@ -1,4 +1,4 @@
-# Microserivces Project - Excel API (Travis Berthrong)
+# Microservices Project - Excel API (Travis Berthrong)
 This project is a microservice that allows users to interact with an excel workbook stored in OneDrive.
 The API provides endpoints to create, delete, and get sheets in the workbook, create tables in the sheets, and add data to the tables.
 The API also provides endpoints to authenticate with OneDrive and get the access token.
